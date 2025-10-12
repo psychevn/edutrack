@@ -1,0 +1,32 @@
+# Python
+dist/
+build/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database
+*.db
+*.sqlite
+
+# IDE
+.idea/
+.vscode/
+
+# Environment variables
+.env
+
+# Flet specific
+*.spec
+generated-*.ico
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Local development files
+*.log
+*.bak
+*.swp
