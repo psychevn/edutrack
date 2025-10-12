@@ -1,0 +1,36 @@
+name: Build Flet Linux App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # allows manual trigger
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y curl git unzip xz-utils zip libglu1-mesa
+          python -m pip install --upgrade pip
+          pip install flet
+
+      - name: Build for Linux
+        run: |
+          flet build linux
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flet-linux-build
+          path: build/linux/
