@@ -1,4 +1,4 @@
-name: Build Flet Linux App
+name: Build Linux Executable (PyInstaller)
 
 on:
   push:
@@ -8,73 +8,40 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    
+
     steps:
+      # 1️⃣ Checkout your repository
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
+      # 2️⃣ Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y curl git unzip xz-utils zip libglu1-mesa libgtk-3-dev
-      
-      # Use Flutter 3.27+ which fully supports Dart 3.9
-      - name: Set up Flutter SDK
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.27.1'
-          channel: 'stable'
-          cache: true
-      
-      - name: Verify Flutter setup
-        run: |
-          flutter --version
-          flutter config --no-analytics
-          flutter precache --linux
-      
-      - name: Clean Flutter cache (force rebuild)
-        run: |
-          flutter clean
-          flutter pub cache clean -f
-      
-      - name: Install Flet
+
+      # 3️⃣ Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flet
-      
-      - name: Initial Flet build (will fail, but creates structure)
-        continue-on-error: true
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pyinstaller
+
+      # 4️⃣ (Optional) Install GTK if you use Flet or GUI libs
+      - name: Install GTK (for Flet or GUI)
         run: |
-          flet build linux --verbose
-      
-      - name: Apply dependency overrides
+          sudo apt update
+          sudo apt install -y libgtk-3-dev
+
+      # 5️⃣ Build your Python app into an executable
+      - name: Build executable with PyInstaller
         run: |
-          cd build/linux
-          cat > pubspec_overrides.yaml << 'EOF'
-          dependency_overrides:
-            webview_flutter_android: 3.16.0
-            webview_flutter_wkwebview: 3.13.0
-          EOF
-      
-      - name: Rebuild with overrides
-        run: |
-          cd build/linux
-          flutter clean
-          flutter pub get
-          flutter build linux --release
-      
-      - name: Copy built app back
-        run: |
-          mkdir -p build/linux/x64/release/bundle
-          cp -r build/linux/build/linux/x64/release/bundle/* build/linux/x64/release/bundle/ || true
-      
-      - name: Upload build artifacts
+          pyinstaller --onefile --name "edutrack" main.py
+
+      # 6️⃣ Upload the built binary as artifact
+      - name: Upload Linux executable
         uses: actions/upload-artifact@v4
         with:
-          name: flet-linux-build
-          path: build/linux/
+          name: linux-executable
+          path: dist/
+
